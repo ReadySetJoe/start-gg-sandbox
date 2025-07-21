@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
 
 export const GET_USER_BY_SLUG = gql`
   query GetUserBySlug($slug: String!) {
@@ -32,17 +32,18 @@ export const GET_USER_BY_SLUG = gql`
 `;
 
 export const GET_TOURNAMENT_ENTRANTS = gql`
-  query GetTournamentEntrants($slug: String!, $page: Int = 1, $perPage: Int = 20, $filter: String) {
+  query GetTournamentEntrants(
+    $slug: String!
+    $page: Int = 1
+    $perPage: Int = 20
+    $filter: String
+  ) {
     tournament(slug: $slug) {
       id
       name
-      participants(query: {
-        page: $page
-        perPage: $perPage
-        filter: {
-          gamerTag: $filter
-        }
-      }) {
+      participants(
+        query: { page: $page, perPage: $perPage, filter: { gamerTag: $filter } }
+      ) {
         nodes {
           id
           gamerTag
@@ -73,13 +74,13 @@ export const GET_TOURNAMENT_ENTRANTS = gql`
 
 export const SEARCH_RECENT_TOURNAMENTS = gql`
   query SearchRecentTournaments($perPage: Int = 5) {
-    tournaments(query: {
-      perPage: $perPage
-      sortBy: "startAt desc"
-      filter: {
-        past: false
+    tournaments(
+      query: {
+        perPage: $perPage
+        sortBy: "startAt desc"
+        filter: { past: false }
       }
-    }) {
+    ) {
       nodes {
         id
         name
@@ -99,7 +100,11 @@ export const SEARCH_RECENT_TOURNAMENTS = gql`
 `;
 
 export const GET_PLAYER_DETAILS = gql`
-  query GetPlayerDetails($playerId: ID!, $perPage: Int = 20, $filters: SetFilters) {
+  query GetPlayerDetails(
+    $playerId: ID!
+    $perPage: Int = 20
+    $filters: SetFilters
+  ) {
     player(id: $playerId) {
       id
       gamerTag
@@ -187,9 +192,7 @@ export const GET_PLAYER_TOURNAMENTS = gql`
       id
       gamerTag
       user {
-        tournaments(query: {
-          perPage: $perPage
-        }) {
+        tournaments(query: { perPage: $perPage }) {
           nodes {
             id
             name
@@ -202,12 +205,9 @@ export const GET_PLAYER_TOURNAMENTS = gql`
               id
               name
               numEntrants
-              standings(query: {
-                perPage: 1
-                filter: {
-                  participantIds: [$playerId]
-                }
-              }) {
+              standings(
+                query: { perPage: 1, filter: { participantIds: [$playerId] } }
+              ) {
                 nodes {
                   id
                   placement

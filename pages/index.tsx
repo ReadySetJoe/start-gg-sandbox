@@ -19,7 +19,8 @@ export default function Home() {
             🔍 Player Profiles
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-            Search and analyze individual player performance, match history, and tournament results.
+            Search and analyze individual player performance, match history, and
+            tournament results.
           </p>
           <Link
             href="/search"
@@ -34,7 +35,8 @@ export default function Home() {
             ⚔️ Head-to-Head Matrix
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-            Create comprehensive matchup matrices to compare multiple players against each other.
+            Create comprehensive matchup matrices to compare multiple players
+            against each other.
           </p>
           <Link
             href="/head-to-head"
@@ -49,7 +51,8 @@ export default function Home() {
             🏆 Power Rankings
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-            Compare multiple players and generate data-driven power rankings for tournaments.
+            Compare multiple players and generate data-driven power rankings for
+            tournaments.
           </p>
           <Link
             href="/rankings"

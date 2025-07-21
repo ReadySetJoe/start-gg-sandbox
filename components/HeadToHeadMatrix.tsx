@@ -4,6 +4,9 @@ import { GET_PLAYER_HEAD_TO_HEAD } from "@/lib/queries";
 import { Player, Set } from "@/types/startgg";
 import PlayerSearch from "./PlayerSearch";
 
+const BATCH_SIZE = 3;
+const SETS_PER_PLAYER = 100;
+
 interface HeadToHeadRecord {
   wins: number;
   losses: number;
@@ -97,8 +100,7 @@ export default function HeadToHeadMatrix({
         const { data } = await getHeadToHead({
           variables: {
             playerId: player1.id,
-            perPage: 20,
-            afterDate,
+            perPage: SETS_PER_PLAYER,
           },
         });
 
@@ -189,12 +191,12 @@ export default function HeadToHeadMatrix({
       }
 
       // Process requests in batches
-      for (let i = 0; i < requests.length; i += batchSize) {
-        const batch = requests.slice(i, i + batchSize);
+      for (let i = 0; i < requests.length; i += BATCH_SIZE) {
+        const batch = requests.slice(i, i + BATCH_SIZE);
         await Promise.all(batch.map(request => request()));
 
         // Add small delay between batches to be respectful to the API
-        if (i + batchSize < requests.length) {
+        if (i + BATCH_SIZE < requests.length) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }

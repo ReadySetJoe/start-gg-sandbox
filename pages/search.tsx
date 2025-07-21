@@ -1,7 +1,7 @@
-import { useRouter } from 'next/router';
-import PlayerSearch from '@/components/PlayerSearch';
-import SearchHelp from '@/components/SearchHelp';
-import { Player } from '@/types/startgg';
+import { useRouter } from "next/router";
+import PlayerSearch from "@/components/PlayerSearch";
+import SearchHelp from "@/components/SearchHelp";
+import { Player } from "@/types/startgg";
 
 export default function Search() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function Search() {
       <h1 className="text-4xl font-bold text-center text-gradient mb-8">
         Search Players
       </h1>
-      
+
       <SearchHelp />
       <PlayerSearch onPlayerSelect={handlePlayerSelect} />
     </>

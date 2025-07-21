@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { useLazyQuery } from '@apollo/client';
-import { GET_PLAYER_HEAD_TO_HEAD } from '@/lib/queries';
-import { Set } from '@/types/startgg';
-import PlayerSearch from './PlayerSearch';
-import { Player } from '@/types/startgg';
+import { useState } from "react";
+import { useLazyQuery } from "@apollo/client";
+import { GET_PLAYER_HEAD_TO_HEAD } from "@/lib/queries";
+import { Set } from "@/types/startgg";
+import PlayerSearch from "./PlayerSearch";
+import { Player } from "@/types/startgg";
 
 interface HeadToHeadAnalysisProps {
   currentPlayer: Player;
@@ -17,30 +17,36 @@ interface HeadToHeadRecord {
   recentSets: Set[];
 }
 
-export default function HeadToHeadAnalysis({ currentPlayer }: HeadToHeadAnalysisProps) {
+export default function HeadToHeadAnalysis({
+  currentPlayer,
+}: HeadToHeadAnalysisProps) {
   const [opponentPlayer, setOpponentPlayer] = useState<Player | null>(null);
   const [showOpponentSearch, setShowOpponentSearch] = useState(false);
-  const [timeFilter, setTimeFilter] = useState<'all' | '6months' | '1year' | '2years'>('1year');
-  
-  const [getHeadToHead, { loading, data, error }] = useLazyQuery(GET_PLAYER_HEAD_TO_HEAD);
+  const [timeFilter, setTimeFilter] = useState<
+    "all" | "6months" | "1year" | "2years"
+  >("1year");
+
+  const [getHeadToHead, { loading, data, error }] = useLazyQuery(
+    GET_PLAYER_HEAD_TO_HEAD
+  );
 
   const handleOpponentSelect = (player: Player) => {
     setOpponentPlayer(player);
     setShowOpponentSearch(false);
-    
+
     // Calculate date filter
     const now = new Date();
     let afterDate: Date | null = null;
-    
+
     switch (timeFilter) {
-      case '6months':
-        afterDate = new Date(now.getTime() - (6 * 30 * 24 * 60 * 60 * 1000));
+      case "6months":
+        afterDate = new Date(now.getTime() - 6 * 30 * 24 * 60 * 60 * 1000);
         break;
-      case '1year':
-        afterDate = new Date(now.getTime() - (365 * 24 * 60 * 60 * 1000));
+      case "1year":
+        afterDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
         break;
-      case '2years':
-        afterDate = new Date(now.getTime() - (2 * 365 * 24 * 60 * 60 * 1000));
+      case "2years":
+        afterDate = new Date(now.getTime() - 2 * 365 * 24 * 60 * 60 * 1000);
         break;
     }
 
@@ -48,8 +54,8 @@ export default function HeadToHeadAnalysis({ currentPlayer }: HeadToHeadAnalysis
       variables: {
         playerId: currentPlayer.id,
         perPage: 15,
-        afterDate: afterDate ? Math.floor(afterDate.getTime() / 1000) : null
-      }
+        afterDate: afterDate ? Math.floor(afterDate.getTime() / 1000) : null,
+      },
     });
   };
 
@@ -63,7 +69,7 @@ export default function HeadToHeadAnalysis({ currentPlayer }: HeadToHeadAnalysis
     // Filter sets to only include matches against the specific opponent
     const headToHeadSets = sets.filter((set: Set) => {
       return set.slots?.some(slot =>
-        slot.entrant?.participants?.some(p => p.id === player.id)
+        slot.entrant?.participants?.some(p => p.id === opponentPlayer?.id)
       );
     });
 
@@ -71,7 +77,7 @@ export default function HeadToHeadAnalysis({ currentPlayer }: HeadToHeadAnalysis
       const playerEntrant = set.slots?.find(slot =>
         slot.entrant?.participants?.some(p => p.id === currentPlayer.id)
       );
-      
+
       if (playerEntrant?.entrant?.id === set.winnerId) {
         wins++;
       } else {
@@ -87,7 +93,7 @@ export default function HeadToHeadAnalysis({ currentPlayer }: HeadToHeadAnalysis
       losses,
       total,
       winRate,
-      recentSets: sets
+      recentSets: sets,
     };
   };
 
@@ -95,10 +101,14 @@ export default function HeadToHeadAnalysis({ currentPlayer }: HeadToHeadAnalysis
 
   const getTimeFilterLabel = () => {
     switch (timeFilter) {
-      case 'all': return 'All Time';
-      case '6months': return 'Last 6 Months';
-      case '1year': return 'Last Year';
-      case '2years': return 'Last 2 Years';
+      case "all":
+        return "All Time";
+      case "6months":
+        return "Last 6 Months";
+      case "1year":
+        return "Last Year";
+      case "2years":
+        return "Last 2 Years";
     }
   };
 
@@ -130,7 +140,11 @@ export default function HeadToHeadAnalysis({ currentPlayer }: HeadToHeadAnalysis
         <div className="flex gap-2">
           <select
             value={timeFilter}
-            onChange={(e) => setTimeFilter(e.target.value as 'all' | '6months' | '1year' | '2years')}
+            onChange={e =>
+              setTimeFilter(
+                e.target.value as "all" | "6months" | "1year" | "2years"
+              )
+            }
             className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-sm"
           >
             <option value="6months">Last 6 Months</option>
@@ -202,27 +216,39 @@ export default function HeadToHeadAnalysis({ currentPlayer }: HeadToHeadAnalysis
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {record.wins}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Wins</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Wins
+                  </div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {record.losses}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Losses</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Losses
+                  </div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {record.total}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Total</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Total
+                  </div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className={`text-2xl font-bold ${
-                    record.winRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                  }`}>
+                  <div
+                    className={`text-2xl font-bold ${
+                      record.winRate >= 50
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
                     {record.winRate.toFixed(1)}%
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Win Rate</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Win Rate
+                  </div>
                 </div>
               </div>
 
@@ -233,27 +259,39 @@ export default function HeadToHeadAnalysis({ currentPlayer }: HeadToHeadAnalysis
                   </h4>
                   <div className="space-y-2">
                     {record.recentSets.slice(0, 5).map((set: Set) => {
-                      const isWin = set.slots?.find(slot =>
-                        slot.entrant?.participants?.some(p => p.id === currentPlayer.id)
-                      )?.entrant?.id === set.winnerId;
+                      const isWin =
+                        set.slots?.find(slot =>
+                          slot.entrant?.participants?.some(
+                            p => p.id === currentPlayer.id
+                          )
+                        )?.entrant?.id === set.winnerId;
 
                       return (
-                        <div key={set.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
+                        <div
+                          key={set.id}
+                          className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded"
+                        >
                           <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${
-                              isWin ? 'bg-green-500' : 'bg-red-500'
-                            }`}></div>
+                            <div
+                              className={`w-2 h-2 rounded-full ${
+                                isWin ? "bg-green-500" : "bg-red-500"
+                              }`}
+                            ></div>
                             <div className="text-sm">
                               <div className="font-medium text-gray-900 dark:text-gray-100">
                                 {set.event.tournament.name}
                               </div>
                               <div className="text-gray-600 dark:text-gray-400">
-                                {set.displayScore} • {set.fullRoundText || set.round}
+                                {set.displayScore} •{" "}
+                                {set.fullRoundText || set.round}
                               </div>
                             </div>
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-500">
-                            {set.completedAt && new Date(set.completedAt * 1000).toLocaleDateString()}
+                            {set.completedAt &&
+                              new Date(
+                                set.completedAt * 1000
+                              ).toLocaleDateString()}
                           </div>
                         </div>
                       );

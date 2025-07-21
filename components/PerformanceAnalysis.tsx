@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { GET_PLAYER_DETAILS } from '@/lib/queries';
-import { Set } from '@/types/startgg';
+import { useState } from "react";
+import { useQuery } from "@apollo/client";
+import { GET_PLAYER_DETAILS } from "@/lib/queries";
+import { Set } from "@/types/startgg";
 
 interface PerformanceAnalysisProps {
   playerId: string;
@@ -16,41 +16,52 @@ interface PeriodStats {
   period: string;
 }
 
-export default function PerformanceAnalysis({ playerId }: PerformanceAnalysisProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'3months' | '6months' | '1year' | '2years'>('1year');
-  
+export default function PerformanceAnalysis({
+  playerId,
+}: PerformanceAnalysisProps) {
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    "3months" | "6months" | "1year" | "2years"
+  >("1year");
+
   // Get data for different time periods
   const now = new Date();
   const periods = [
-    { key: '3months', label: 'Last 3 Months', months: 3 },
-    { key: '6months', label: 'Last 6 Months', months: 6 },
-    { key: '1year', label: 'Last Year', months: 12 },
-    { key: '2years', label: 'Last 2 Years', months: 24 },
+    { key: "3months", label: "Last 3 Months", months: 3 },
+    { key: "6months", label: "Last 6 Months", months: 6 },
+    { key: "1year", label: "Last Year", months: 12 },
+    { key: "2years", label: "Last 2 Years", months: 24 },
   ];
 
   const getDateFilter = (months: number) => {
-    const date = new Date(now.getTime() - (months * 30 * 24 * 60 * 60 * 1000));
+    const date = new Date(now.getTime() - months * 30 * 24 * 60 * 60 * 1000);
     return Math.floor(date.getTime() / 1000);
   };
 
   const { loading, data, error } = useQuery(GET_PLAYER_DETAILS, {
-    variables: { 
+    variables: {
       playerId,
       perPage: 30,
       filters: {
-        updatedAfter: getDateFilter(24) // Get last 2 years of data
-      }
-    }
+        updatedAfter: getDateFilter(24), // Get last 2 years of data
+      },
+    },
   });
 
   const calculatePeriodStats = (months: number): PeriodStats => {
     if (!data?.player?.sets?.nodes) {
-      return { wins: 0, losses: 0, total: 0, winRate: 0, tournaments: [], period: `${months} months` };
+      return {
+        wins: 0,
+        losses: 0,
+        total: 0,
+        winRate: 0,
+        tournaments: [],
+        period: `${months} months`,
+      };
     }
 
     const cutoffDate = getDateFilter(months);
-    const sets = data.player.sets.nodes.filter((set: Set) => 
-      set.completedAt && set.completedAt >= cutoffDate
+    const sets = data.player.sets.nodes.filter(
+      (set: Set) => set.completedAt && set.completedAt >= cutoffDate
     );
 
     let wins = 0;
@@ -60,7 +71,7 @@ export default function PerformanceAnalysis({ playerId }: PerformanceAnalysisPro
       const playerEntrant = set.slots?.find(slot =>
         slot.entrant?.participants?.some(p => p.id === playerId)
       );
-      
+
       if (playerEntrant?.entrant?.id === set.winnerId) {
         wins++;
       } else {
@@ -77,7 +88,7 @@ export default function PerformanceAnalysis({ playerId }: PerformanceAnalysisPro
       total,
       winRate,
       tournaments: sets,
-      period: months === 12 ? '1 year' : `${months} months`
+      period: months === 12 ? "1 year" : `${months} months`,
     };
   };
 
@@ -91,9 +102,23 @@ export default function PerformanceAnalysis({ playerId }: PerformanceAnalysisPro
   };
 
   const getTrendIndicator = (current: number, previous: number) => {
-    if (current > previous) return { icon: '↗️', color: 'text-green-600 dark:text-green-400', text: 'Improving' };
-    if (current < previous) return { icon: '↘️', color: 'text-red-600 dark:text-red-400', text: 'Declining' };
-    return { icon: '➡️', color: 'text-gray-600 dark:text-gray-400', text: 'Stable' };
+    if (current > previous)
+      return {
+        icon: "↗️",
+        color: "text-green-600 dark:text-green-400",
+        text: "Improving",
+      };
+    if (current < previous)
+      return {
+        icon: "↘️",
+        color: "text-red-600 dark:text-red-400",
+        text: "Declining",
+      };
+    return {
+      icon: "➡️",
+      color: "text-gray-600 dark:text-gray-400",
+      text: "Stable",
+    };
   };
 
   if (loading) {
@@ -121,10 +146,22 @@ export default function PerformanceAnalysis({ playerId }: PerformanceAnalysisPro
   }
 
   const comparison = getComparison();
-  const currentStats = comparison[`stats${selectedPeriod.replace(/months|year|years/, '').replace('3', '3m').replace('6', '6m').replace('1', '1y').replace('2', '2y')}`];
-  
+  const periodKeyMap: Record<
+    "3months" | "6months" | "1year" | "2years",
+    keyof typeof comparison
+  > = {
+    "3months": "stats3m",
+    "6months": "stats6m",
+    "1year": "stats1y",
+    "2years": "stats2y",
+  };
+  const currentStats = comparison[periodKeyMap[selectedPeriod]];
+
   // Calculate trends
-  const winRateTrend = getTrendIndicator(comparison.stats3m.winRate, comparison.stats6m.winRate);
+  const winRateTrend = getTrendIndicator(
+    comparison.stats3m.winRate,
+    comparison.stats6m.winRate
+  );
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 card-hover">
@@ -134,14 +171,18 @@ export default function PerformanceAnalysis({ playerId }: PerformanceAnalysisPro
 
       {/* Period Selector */}
       <div className="flex gap-2 mb-6 overflow-x-auto">
-        {periods.map((period) => (
+        {periods.map(period => (
           <button
             key={period.key}
-            onClick={() => setSelectedPeriod(period.key as '3months' | '6months' | '1year' | '2years')}
+            onClick={() =>
+              setSelectedPeriod(
+                period.key as "3months" | "6months" | "1year" | "2years"
+              )
+            }
             className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
               selectedPeriod === period.key
-                ? 'gradient-primary text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? "gradient-primary text-white"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
             {period.label}
@@ -170,21 +211,31 @@ export default function PerformanceAnalysis({ playerId }: PerformanceAnalysisPro
           <div className="text-sm text-gray-600 dark:text-gray-400">Sets</div>
         </div>
         <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className={`text-xl font-bold ${
-            currentStats.winRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-          }`}>
+          <div
+            className={`text-xl font-bold ${
+              currentStats.winRate >= 50
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
             {currentStats.winRate.toFixed(1)}%
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Win Rate</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Win Rate
+          </div>
         </div>
       </div>
 
       {/* Performance Trend */}
       <div className="mb-6">
-        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Performance Trend</h4>
+        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
+          Performance Trend
+        </h4>
         <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Win Rate Trend (3m vs 6m)</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Win Rate Trend (3m vs 6m)
+            </span>
             <div className={`flex items-center gap-2 ${winRateTrend.color}`}>
               <span>{winRateTrend.icon}</span>
               <span className="text-sm font-medium">{winRateTrend.text}</span>
@@ -195,12 +246,27 @@ export default function PerformanceAnalysis({ playerId }: PerformanceAnalysisPro
 
       {/* Period Comparison */}
       <div>
-        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Period Comparison</h4>
+        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
+          Period Comparison
+        </h4>
         <div className="space-y-2">
-          {periods.map((period) => {
-            const stats = comparison[`stats${period.key.replace(/months|year|years/, '').replace('3', '3m').replace('6', '6m').replace('1', '1y').replace('2', '2y')}`];
+          {periods.map(period => {
+            const periodKeyMap: Record<
+              "3months" | "6months" | "1year" | "2years",
+              keyof typeof comparison
+            > = {
+              "3months": "stats3m",
+              "6months": "stats6m",
+              "1year": "stats1y",
+              "2years": "stats2y",
+            };
+            const stats =
+              comparison[periodKeyMap[period.key as keyof typeof periodKeyMap]];
             return (
-              <div key={period.key} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
+              <div
+                key={period.key}
+                className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded"
+              >
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {period.label}
                 </span>
@@ -208,9 +274,13 @@ export default function PerformanceAnalysis({ playerId }: PerformanceAnalysisPro
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {stats.wins}-{stats.losses}
                   </span>
-                  <span className={`text-sm font-medium ${
-                    stats.winRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                  }`}>
+                  <span
+                    className={`text-sm font-medium ${
+                      stats.winRate >= 50
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
                     {stats.winRate.toFixed(1)}%
                   </span>
                 </div>

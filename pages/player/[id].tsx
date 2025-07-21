@@ -71,20 +71,7 @@ export default function PlayerProfilePage() {
   const recentSets = player.sets?.nodes || [];
 
   const getSetResult = (set: Set) => {
-    // Log set structure for debugging
-    console.log("Set structure:", {
-      winnerId: set.winnerId,
-      slots: set.slots?.map(slot => ({
-        entrantId: slot.entrant?.id,
-        entrantName: slot.entrant?.name,
-        participants: slot.entrant?.participants?.map(p => ({
-          id: p.id,
-          gamerTag: p.gamerTag,
-        })),
-      })),
-    });
-
-    // Try different approaches to find the player's slot
+    // Find the player's slot in the set
     let playerSlot = set.slots?.find(slot =>
       slot.entrant?.participants?.some(p => String(p.id) === String(playerId))
     );

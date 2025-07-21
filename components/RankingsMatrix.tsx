@@ -22,6 +22,16 @@ interface PlayerRanking {
 }
 
 const STORAGE_KEY = "powerRankingsPlayers";
+const BATCH_SIZE = 3;
+const SETS_PER_PLAYER = 100;
+
+// Time filter to match count mapping
+const TIME_FILTER_LIMITS = {
+  "6months": 10,
+  "1year": 20,
+  "2years": 30,
+  all: Infinity,
+} as const;
 
 export default function RankingsMatrix() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -37,7 +47,7 @@ export default function RankingsMatrix() {
 
   const [getHeadToHead] = useLazyQuery(GET_PLAYER_HEAD_TO_HEAD);
 
-  // Load players from localStorage on mount
+  // Load and save players to localStorage
   useEffect(() => {
     const savedPlayers = localStorage.getItem(STORAGE_KEY);
     if (savedPlayers) {
@@ -45,12 +55,11 @@ export default function RankingsMatrix() {
         const parsedPlayers = JSON.parse(savedPlayers);
         setPlayers(parsedPlayers);
       } catch (error) {
-        console.error("Failed to load saved players:", error);
+        // Failed to load saved players, using empty array
       }
     }
   }, []);
 
-  // Save players to localStorage whenever players change
   useEffect(() => {
     if (players.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
@@ -59,6 +68,7 @@ export default function RankingsMatrix() {
     }
   }, [players]);
 
+  // Player management functions
   const addPlayer = (player: Player) => {
     if (!players.find(p => p.id === player.id)) {
       setPlayers([...players, player]);
@@ -78,138 +88,162 @@ export default function RankingsMatrix() {
     setRecords(newRecords);
   };
 
+  // Helper functions
   const getRecordKey = (player1Id: string, player2Id: string) => {
     return `${player1Id}-vs-${player2Id}`;
   };
 
-  const calculateSymmetricHeadToHead = useCallback(async (player1: Player, player2: Player) => {
-    const recordKey1 = getRecordKey(player1.id, player2.id);
-    const recordKey2 = getRecordKey(player2.id, player1.id);
-    
-    // Set loading state for both directions
-    setRecords(prev => ({
-      ...prev,
-      [recordKey1]: { wins: 0, losses: 0, total: 0, winRate: 0, loading: true },
-      [recordKey2]: { wins: 0, losses: 0, total: 0, winRate: 0, loading: true }
-    }));
+  const playerMatches = (
+    participant: { id: string; gamerTag?: string },
+    targetPlayer: Player
+  ) => {
+    return (
+      String(participant.id) === String(targetPlayer.id) ||
+      participant.gamerTag?.toLowerCase() ===
+        targetPlayer.gamerTag.toLowerCase()
+    );
+  };
 
-    try {
-      // Fetch sets from both players to get more comprehensive data
-      const [data1, data2] = await Promise.all([
-        getHeadToHead({
-          variables: {
-            playerId: player1.id,
-            perPage: 100,
-          },
-        }),
-        getHeadToHead({
-          variables: {
-            playerId: player2.id,
-            perPage: 100,
-          },
-        })
-      ]);
+  // Main head-to-head calculation - calculates both directions simultaneously for consistency
+  const calculateSymmetricHeadToHead = useCallback(
+    async (player1: Player, player2: Player) => {
+      const recordKey1 = getRecordKey(player1.id, player2.id);
+      const recordKey2 = getRecordKey(player2.id, player1.id);
 
-      // Combine sets from both players and deduplicate by set ID
-      const allSets = new Map();
-      
-      if (data1?.data?.player?.sets?.nodes) {
-        data1.data.player.sets.nodes.forEach((set: Set) => allSets.set(set.id, set));
-      }
-      
-      if (data2?.data?.player?.sets?.nodes) {
-        data2.data.player.sets.nodes.forEach((set: Set) => allSets.set(set.id, set));
-      }
+      // Set loading state for both directions
+      setRecords(prev => ({
+        ...prev,
+        [recordKey1]: {
+          wins: 0,
+          losses: 0,
+          total: 0,
+          winRate: 0,
+          loading: true,
+        },
+        [recordKey2]: {
+          wins: 0,
+          losses: 0,
+          total: 0,
+          winRate: 0,
+          loading: true,
+        },
+      }));
 
-      const combinedSets = Array.from(allSets.values());
-      
-      console.log(`🔍 SYMMETRIC: Fetched ${combinedSets.length} combined unique sets for ${player1.gamerTag} vs ${player2.gamerTag}`);
-      
-      // Find head-to-head sets where both players participated
-      const headToHeadSets = combinedSets.filter((set: Set) => {
-        const hasPlayer1 = set.slots?.some(slot =>
-          slot.entrant?.participants?.some(p => String(p.id) === String(player1.id) || p.gamerTag?.toLowerCase() === player1.gamerTag.toLowerCase())
-        );
-        const hasPlayer2 = set.slots?.some(slot =>
-          slot.entrant?.participants?.some(p => String(p.id) === String(player2.id) || p.gamerTag?.toLowerCase() === player2.gamerTag.toLowerCase())
-        );
-        return hasPlayer1 && hasPlayer2;
-      });
+      try {
+        // Fetch sets from both players to get comprehensive head-to-head history
+        const [data1, data2] = await Promise.all([
+          getHeadToHead({
+            variables: {
+              playerId: player1.id,
+              perPage: SETS_PER_PLAYER,
+            },
+          }),
+          getHeadToHead({
+            variables: {
+              playerId: player2.id,
+              perPage: SETS_PER_PLAYER,
+            },
+          }),
+        ]);
 
-      console.log(`🔍 SYMMETRIC: Found ${headToHeadSets.length} true head-to-head sets`);
+        // Combine and deduplicate sets by ID
+        const allSets = new Map();
 
-      // Determine how many recent head-to-head sets to use
-      let maxSets;
-      switch (timeFilter) {
-        case "6months": maxSets = 10; break;
-        case "1year": maxSets = 20; break;
-        case "2years": maxSets = 30; break;
-        case "all": default: maxSets = headToHeadSets.length; break;
-      }
+        if (data1?.data?.player?.sets?.nodes) {
+          data1.data.player.sets.nodes.forEach((set: Set) =>
+            allSets.set(set.id, set)
+          );
+        }
 
-      const recentHeadToHeadSets = headToHeadSets.slice(0, maxSets);
-      
-      let player1Wins = 0;
-      let player1Losses = 0;
+        if (data2?.data?.player?.sets?.nodes) {
+          data2.data.player.sets.nodes.forEach((set: Set) =>
+            allSets.set(set.id, set)
+          );
+        }
 
-      recentHeadToHeadSets.forEach((set: Set) => {
-        const player1Entrant = set.slots?.find(slot =>
-          slot.entrant?.participants?.some(p => String(p.id) === String(player1.id) || p.gamerTag?.toLowerCase() === player1.gamerTag.toLowerCase())
-        );
+        const combinedSets = Array.from(allSets.values());
 
-        const player1EntrantId = player1Entrant?.entrant?.id;
-        const winnerId = set.winnerId;
-        
-        if (player1EntrantId && winnerId) {
-          const isPlayer1Winner = String(player1EntrantId) === String(winnerId);
-          
-          if (isPlayer1Winner) {
-            player1Wins++;
-          } else {
-            player1Losses++;
+        // Find sets where both players participated
+        const headToHeadSets = combinedSets.filter((set: Set) => {
+          const hasPlayer1 = set.slots?.some(slot =>
+            slot.entrant?.participants?.some(p => playerMatches(p, player1))
+          );
+          const hasPlayer2 = set.slots?.some(slot =>
+            slot.entrant?.participants?.some(p => playerMatches(p, player2))
+          );
+          return hasPlayer1 && hasPlayer2;
+        });
+
+        // Apply time filter by limiting number of recent matches
+        const maxSets = TIME_FILTER_LIMITS[timeFilter] || headToHeadSets.length;
+        const recentHeadToHeadSets = headToHeadSets.slice(0, maxSets);
+
+        // Calculate wins/losses from player1's perspective
+        let player1Wins = 0;
+        let player1Losses = 0;
+
+        recentHeadToHeadSets.forEach((set: Set) => {
+          const player1Entrant = set.slots?.find(slot =>
+            slot.entrant?.participants?.some(p => playerMatches(p, player1))
+          );
+
+          const player1EntrantId = player1Entrant?.entrant?.id;
+          const winnerId = set.winnerId;
+
+          if (player1EntrantId && winnerId) {
+            const isPlayer1Winner =
+              String(player1EntrantId) === String(winnerId);
+
+            if (isPlayer1Winner) {
+              player1Wins++;
+            } else {
+              player1Losses++;
+            }
           }
-        }
-      });
+        });
 
-      const total = player1Wins + player1Losses;
-      const player1WinRate = total > 0 ? (player1Wins / total) * 100 : 0;
-      const player2WinRate = total > 0 ? (player1Losses / total) * 100 : 0; // Player2's wins are Player1's losses
+        // Calculate stats
+        const total = player1Wins + player1Losses;
+        const player1WinRate = total > 0 ? (player1Wins / total) * 100 : 0;
+        const player2WinRate = total > 0 ? (player1Losses / total) * 100 : 0;
 
-      // Set symmetric records
-      setRecords(prev => ({
-        ...prev,
-        [recordKey1]: {
-          wins: player1Wins,
-          losses: player1Losses,
-          total,
-          winRate: player1WinRate,
-          loading: false
-        },
-        [recordKey2]: {
-          wins: player1Losses, // Player2's wins = Player1's losses
-          losses: player1Wins, // Player2's losses = Player1's wins
-          total,
-          winRate: player2WinRate,
-          loading: false
-        }
-      }));
+        // Set symmetric records (player2's wins are player1's losses and vice versa)
+        setRecords(prev => ({
+          ...prev,
+          [recordKey1]: {
+            wins: player1Wins,
+            losses: player1Losses,
+            total,
+            winRate: player1WinRate,
+            loading: false,
+          },
+          [recordKey2]: {
+            wins: player1Losses,
+            losses: player1Wins,
+            total,
+            winRate: player2WinRate,
+            loading: false,
+          },
+        }));
+      } catch (error) {
+        const errorRecord = {
+          wins: 0,
+          losses: 0,
+          total: 0,
+          winRate: 0,
+          loading: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
 
-      console.log(`🔍 SYMMETRIC RESULT: ${player1.gamerTag} ${player1Wins}-${player1Losses} vs ${player2.gamerTag} ${player1Losses}-${player1Wins}`);
-
-    } catch (error) {
-      setRecords(prev => ({
-        ...prev,
-        [recordKey1]: {
-          wins: 0, losses: 0, total: 0, winRate: 0, loading: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        },
-        [recordKey2]: {
-          wins: 0, losses: 0, total: 0, winRate: 0, loading: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }
-      }));
-    }
-  }, [getHeadToHead, timeFilter]);
+        setRecords(prev => ({
+          ...prev,
+          [recordKey1]: errorRecord,
+          [recordKey2]: errorRecord,
+        }));
+      }
+    },
+    [getHeadToHead, timeFilter]
+  );
 
   const calculateHeadToHead = useCallback(
     async (player1: Player, player2: Player) => {
@@ -240,51 +274,24 @@ export default function RankingsMatrix() {
           let wins = 0;
           let losses = 0;
 
-          console.log(`🔍 DEBUG: Fetched ${allSets.length} total sets for ${player1.gamerTag}`);
-          console.log(`🔍 Looking for opponent: ${player2.gamerTag} (ID: ${player2.id})`);
-          
-          // Debug: Show ALL participant IDs in first few sets
-          console.log(`🔍 DEBUGGING: All participant data in first 5 sets:`);
-          allSets.slice(0, 5).forEach((set: Set, index: number) => {
-            const allParticipants = set.slots?.flatMap(slot => 
-              slot.entrant?.participants?.map(p => ({
-                id: p.id,
-                idType: typeof p.id,
-                gamerTag: p.gamerTag
-              })) || []
-            ) || [];
-            console.log(`Set ${index + 1}:`, allParticipants);
-            
-            // Also log if any gamerTag contains part of the opponent's name
-            allParticipants.forEach(p => {
-              if (p.gamerTag?.toLowerCase().includes(player2.gamerTag.toLowerCase()) || 
-                  player2.gamerTag.toLowerCase().includes(p.gamerTag?.toLowerCase() || '')) {
-                console.log(`🔍 POTENTIAL MATCH by gamerTag: ${p.gamerTag} vs ${player2.gamerTag}`);
-              }
-            });
-          });
-          
+
           // First, find ALL head-to-head sets between these two players
           const allHeadToHeadSets = allSets.filter((set: Set) => {
             const hasOpponent = set.slots?.some(slot =>
               slot.entrant?.participants?.some(p => {
                 // Try multiple comparison methods
                 const idMatch = String(p.id) === String(player2.id);
-                const gamerTagMatch = p.gamerTag?.toLowerCase() === player2.gamerTag.toLowerCase();
-                
+                const gamerTagMatch =
+                  p.gamerTag?.toLowerCase() === player2.gamerTag.toLowerCase();
+
                 const match = idMatch || gamerTagMatch;
-                
-                if (match) {
-                  console.log(`🔍 MATCH FOUND! Participant ${p.gamerTag} (${p.id}) matches ${player2.gamerTag} (${player2.id})`);
-                  console.log(`🔍 Match type: ${idMatch ? 'ID' : 'gamerTag'}`);
-                }
+
                 return match;
               })
             );
             return hasOpponent;
           });
 
-          console.log(`🔍 Found ${allHeadToHeadSets.length} total head-to-head sets between ${player1.gamerTag} and ${player2.gamerTag}`);
 
           // Determine how many recent head-to-head sets to use based on time filter
           let maxSets;
@@ -306,59 +313,32 @@ export default function RankingsMatrix() {
 
           // Take the most recent X head-to-head sets (they should already be in chronological order)
           const headToHeadSets = allHeadToHeadSets.slice(0, maxSets);
-          
-          console.log(`🔍 Using ${headToHeadSets.length} recent head-to-head sets (limit: ${maxSets})`);
 
-          if (headToHeadSets.length > 0) {
-            console.log(`🔍 Recent matchups:`, headToHeadSets.map(set => ({
-              id: set.id,
-              completedAt: set.completedAt ? new Date(set.completedAt * 1000).toLocaleDateString() : 'Unknown date',
-              winnerId: set.winnerId
-            })));
-          }
 
-          console.log(`🔍 Found ${headToHeadSets.length} head-to-head sets`);
 
           headToHeadSets.forEach((set: Set) => {
-            console.log(`🔍 Analyzing set ${set.id}:`);
-            
             // Find both entrants
             const player1Entrant = set.slots?.find(slot =>
-              slot.entrant?.participants?.some(p => String(p.id) === String(player1.id) || p.gamerTag?.toLowerCase() === player1.gamerTag.toLowerCase())
-            );
-            
-            const player2Entrant = set.slots?.find(slot =>
-              slot.entrant?.participants?.some(p => String(p.id) === String(player2.id) || p.gamerTag?.toLowerCase() === player2.gamerTag.toLowerCase())
+              slot.entrant?.participants?.some(
+                p =>
+                  String(p.id) === String(player1.id) ||
+                  p.gamerTag?.toLowerCase() === player1.gamerTag.toLowerCase()
+              )
             );
 
-            console.log(`🔍 Player1 (${player1.gamerTag}) entrant:`, {
-              entrantId: player1Entrant?.entrant?.id,
-              participants: player1Entrant?.entrant?.participants?.map(p => ({ id: p.id, tag: p.gamerTag }))
-            });
-            
-            console.log(`🔍 Player2 (${player2.gamerTag}) entrant:`, {
-              entrantId: player2Entrant?.entrant?.id,
-              participants: player2Entrant?.entrant?.participants?.map(p => ({ id: p.id, tag: p.gamerTag }))
-            });
-            
-            console.log(`🔍 Set winnerId: ${set.winnerId} (type: ${typeof set.winnerId})`);
-
-            // Check winner with better type handling
+            // Check winner with proper type handling
             const player1EntrantId = player1Entrant?.entrant?.id;
             const winnerId = set.winnerId;
-            
+
             if (player1EntrantId && winnerId) {
               const isWinner = String(player1EntrantId) === String(winnerId);
-              
+
               if (isWinner) {
                 wins++;
-                console.log(`🔍 ✅ WIN for ${player1.gamerTag} (entrant ${player1EntrantId} === winner ${winnerId})`);
               } else {
                 losses++;
-                console.log(`🔍 ❌ LOSS for ${player1.gamerTag} (entrant ${player1EntrantId} !== winner ${winnerId})`);
               }
             } else {
-              console.log(`🔍 ⚠️ Missing data - entrantId: ${player1EntrantId}, winnerId: ${winnerId}`);
               // If we can't determine winner, count as loss for safety
               losses++;
             }
@@ -420,7 +400,9 @@ export default function RankingsMatrix() {
       // Generate unique matchup combinations (only calculate each pair once)
       for (let i = 0; i < players.length; i++) {
         for (let j = i + 1; j < players.length; j++) {
-          requests.push(() => calculateSymmetricHeadToHead(players[i], players[j]));
+          requests.push(() =>
+            calculateSymmetricHeadToHead(players[i], players[j])
+          );
         }
       }
 
@@ -480,7 +462,8 @@ export default function RankingsMatrix() {
 
     // Sort by win rate, then by total wins as tiebreaker
     newRankings.sort((a, b) => {
-      if (Math.abs(a.winRate - b.winRate) < 0.1) { // If win rates are very close (within 0.1%)
+      if (Math.abs(a.winRate - b.winRate) < 0.1) {
+        // If win rates are very close (within 0.1%)
         return b.totalWins - a.totalWins; // Use total wins as tiebreaker
       }
       return b.winRate - a.winRate; // Primary sort by win rate
@@ -554,30 +537,20 @@ export default function RankingsMatrix() {
     );
   };
 
+  // Display helper functions
   const getTimeFilterLabel = () => {
-    switch (timeFilter) {
-      case "6months":
-        return "Last 10 Matches";
-      case "1year":
-        return "Last 20 Matches";
-      case "2years":
-        return "Last 30 Matches";
-      case "all":
-        return "All Matches";
-    }
+    const labels = {
+      "6months": "Last 10 Matches",
+      "1year": "Last 20 Matches",
+      "2years": "Last 30 Matches",
+      all: "All Matches",
+    };
+    return labels[timeFilter];
   };
 
   const getRankEmoji = (index: number) => {
-    switch (index) {
-      case 0:
-        return "🥇";
-      case 1:
-        return "🥈";
-      case 2:
-        return "🥉";
-      default:
-        return `#${index + 1}`;
-    }
+    const medals = ["🥇", "🥈", "🥉"];
+    return medals[index] || `#${index + 1}`;
   };
 
   return (

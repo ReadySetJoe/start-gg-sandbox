@@ -1,4 +1,4 @@
-import RankingsMatrix from '@/components/RankingsMatrix';
+import RankingsMatrix from "@/components/RankingsMatrix";
 
 export default function Rankings() {
   return (
@@ -6,7 +6,7 @@ export default function Rankings() {
       <h1 className="text-4xl font-bold text-center text-gradient mb-8">
         Power Rankings
       </h1>
-      
+
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 text-center">
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
@@ -16,9 +16,9 @@ export default function Rankings() {
             Players ranked by overall wins, with detailed head-to-head breakdown
           </p>
         </div>
-        
+
         <RankingsMatrix />
-        
+
         <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
           <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">
             💡 Power Ranking Methodology

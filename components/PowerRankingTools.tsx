@@ -120,10 +120,7 @@ export default function PowerRankingTools({
           await new Promise(resolve => setTimeout(resolve, 300));
         }
       } catch (error) {
-        console.error(
-          `Error fetching data for player ${player.gamerTag}:`,
-          error
-        );
+        // Error fetching player data, skipping
       }
     }
 
