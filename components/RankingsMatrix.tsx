@@ -274,7 +274,6 @@ export default function RankingsMatrix() {
           let wins = 0;
           let losses = 0;
 
-
           // First, find ALL head-to-head sets between these two players
           const allHeadToHeadSets = allSets.filter((set: Set) => {
             const hasOpponent = set.slots?.some(slot =>
@@ -291,7 +290,6 @@ export default function RankingsMatrix() {
             );
             return hasOpponent;
           });
-
 
           // Determine how many recent head-to-head sets to use based on time filter
           let maxSets;
@@ -313,8 +311,6 @@ export default function RankingsMatrix() {
 
           // Take the most recent X head-to-head sets (they should already be in chronological order)
           const headToHeadSets = allHeadToHeadSets.slice(0, maxSets);
-
-
 
           headToHeadSets.forEach((set: Set) => {
             // Find both entrants
@@ -561,26 +557,6 @@ export default function RankingsMatrix() {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Power Rankings Matrix
           </h3>
-          <div className="flex gap-2">
-            <select
-              value={timeFilter}
-              onChange={e => setTimeFilter(e.target.value as typeof timeFilter)}
-              className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-sm"
-            >
-              <option value="6months">Last 10 Matches</option>
-              <option value="1year">Last 20 Matches</option>
-              <option value="2years">Last 30 Matches</option>
-              <option value="all">All Matches</option>
-            </select>
-            {!showSearch && (
-              <button
-                onClick={() => setShowSearch(true)}
-                className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
-              >
-                + Add Player
-              </button>
-            )}
-          </div>
         </div>
 
         {/* Player Management */}
@@ -608,22 +584,23 @@ export default function RankingsMatrix() {
           </div>
         )}
 
-        {showSearch && (
-          <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-medium text-gray-900 dark:text-gray-100">
-                Add Player
-              </h4>
-              <button
-                onClick={() => setShowSearch(false)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                ×
-              </button>
+        <div className="flex gap-2">
+          {showSearch ? (
+            <div className="flex items-center gap-2">
+              <PlayerSearch
+                onPlayerSelect={addPlayer}
+                handleCancel={() => setShowSearch(false)}
+              />
             </div>
-            <PlayerSearch onPlayerSelect={addPlayer} />
-          </div>
-        )}
+          ) : (
+            <button
+              onClick={() => setShowSearch(true)}
+              className="px-6 py-2 gradient-primary text-white rounded-lg hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+            >
+              + Add Player
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Rankings & Matrix Display */}

@@ -25,12 +25,6 @@ export default function Layout({ children }: LayoutProps) {
                 Search
               </Link>
               <Link
-                href="/head-to-head"
-                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-              >
-                Head-to-Head
-              </Link>
-              <Link
                 href="/rankings"
                 className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               >

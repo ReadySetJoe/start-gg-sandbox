@@ -13,7 +13,7 @@ export default function Home() {
         player statistics.
       </p>
 
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 card-hover">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
             🔍 Player Profiles
@@ -27,22 +27,6 @@ export default function Home() {
             className="inline-block px-4 py-2 gradient-primary text-white rounded-lg hover:opacity-90 transition-all font-medium text-sm"
           >
             Search Players
-          </Link>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 card-hover">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            ⚔️ Head-to-Head Matrix
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-            Create comprehensive matchup matrices to compare multiple players
-            against each other.
-          </p>
-          <Link
-            href="/head-to-head"
-            className="inline-block px-4 py-2 gradient-primary text-white rounded-lg hover:opacity-90 transition-all font-medium text-sm"
-          >
-            Analyze Matchups
           </Link>
         </div>
 
