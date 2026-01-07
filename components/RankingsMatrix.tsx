@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLazyQuery } from "@apollo/client";
-import { GET_PLAYER_HEAD_TO_HEAD } from "@/lib/queries";
+import { GET_PLAYER_HEAD_TO_HEAD, GET_USER_BY_SLUG } from "@/lib/queries";
 import { Player, Set } from "@/types/startgg";
 import PlayerSearch from "./PlayerSearch";
+import {
+  EXAMPLE_PLAYERS,
+  MIN_PLAYERS_FOR_RANKINGS,
+} from "@/lib/example-players";
 
 interface HeadToHeadRecord {
   wins: number;
@@ -46,6 +50,8 @@ export default function RankingsMatrix() {
   const [rankings, setRankings] = useState<PlayerRanking[]>([]);
 
   const [getHeadToHead] = useLazyQuery(GET_PLAYER_HEAD_TO_HEAD);
+  const [getUserBySlug] = useLazyQuery(GET_USER_BY_SLUG);
+  const [loadingExamples, setLoadingExamples] = useState(false);
 
   // Load and save players to localStorage
   useEffect(() => {
@@ -87,6 +93,46 @@ export default function RankingsMatrix() {
     });
     setRecords(newRecords);
   };
+
+  const loadExamplePlayers = async () => {
+    if (EXAMPLE_PLAYERS.length < MIN_PLAYERS_FOR_RANKINGS) {
+      return;
+    }
+
+    setLoadingExamples(true);
+    const loadedPlayers: Player[] = [];
+
+    for (const example of EXAMPLE_PLAYERS) {
+      try {
+        const slug = example.slug.startsWith("user/")
+          ? example.slug
+          : `user/${example.slug}`;
+        const { data } = await getUserBySlug({ variables: { slug } });
+
+        if (data?.user) {
+          const player: Player = {
+            id: data.user.player?.id || data.user.id,
+            gamerTag: data.user.player?.gamerTag || data.user.name || "Unknown",
+            prefix: data.user.player?.prefix,
+            user: data.user,
+          };
+          // Only add if not already in list
+          if (!players.find(p => p.id === player.id)) {
+            loadedPlayers.push(player);
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to load example player: ${example.slug}`, error);
+      }
+    }
+
+    if (loadedPlayers.length > 0) {
+      setPlayers(prev => [...prev, ...loadedPlayers]);
+    }
+    setLoadingExamples(false);
+  };
+
+  const hasExamplePlayers = EXAMPLE_PLAYERS.length >= MIN_PLAYERS_FOR_RANKINGS;
 
   // Helper functions
   const getRecordKey = (player1Id: string, player2Id: string) => {
@@ -584,7 +630,7 @@ export default function RankingsMatrix() {
           </div>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {showSearch ? (
             <div className="flex items-center gap-2">
               <PlayerSearch
@@ -593,12 +639,23 @@ export default function RankingsMatrix() {
               />
             </div>
           ) : (
-            <button
-              onClick={() => setShowSearch(true)}
-              className="px-6 py-2 gradient-primary text-white rounded-lg hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
-            >
-              + Add Player
-            </button>
+            <>
+              <button
+                onClick={() => setShowSearch(true)}
+                className="px-6 py-2 gradient-primary text-white rounded-lg hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              >
+                + Add Player
+              </button>
+              {hasExamplePlayers && (
+                <button
+                  onClick={loadExamplePlayers}
+                  disabled={loadingExamples}
+                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+                >
+                  {loadingExamples ? "Loading..." : "Load Example Players"}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -715,12 +772,23 @@ export default function RankingsMatrix() {
             <p className="text-gray-500 dark:text-gray-400 mb-4">
               Add at least 2 players to generate power rankings
             </p>
-            <button
-              onClick={() => setShowSearch(true)}
-              className="px-4 py-2 gradient-primary text-white rounded-lg hover:opacity-90 transition-all"
-            >
-              Add Players
-            </button>
+            <div className="flex justify-center gap-3 flex-wrap">
+              <button
+                onClick={() => setShowSearch(true)}
+                className="px-4 py-2 gradient-primary text-white rounded-lg hover:opacity-90 transition-all"
+              >
+                Add Players
+              </button>
+              {hasExamplePlayers && (
+                <button
+                  onClick={loadExamplePlayers}
+                  disabled={loadingExamples}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+                >
+                  {loadingExamples ? "Loading..." : "Try Example Players"}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
