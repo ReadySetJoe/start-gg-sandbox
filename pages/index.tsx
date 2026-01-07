@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="max-w-4xl mx-auto text-center">
       <h1 className="text-6xl font-bold text-gradient mb-6 p-1">
-        Start.gg Player Profiles
+        Whoisbetter.me
       </h1>
 
       <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">

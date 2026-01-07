@@ -8,7 +8,7 @@ export default function SearchHelp() {
       <div className="text-center mb-6">
         <button
           onClick={() => setShowHelp(true)}
-          className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+          className="text-primary dark:text-primary-400 hover:underline text-sm"
         >
           Need help finding players? Click here
         </button>
@@ -17,20 +17,20 @@ export default function SearchHelp() {
   }
 
   return (
-    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+    <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-6">
       <div className="flex justify-between items-start mb-3">
-        <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+        <h3 className="font-semibold text-primary-900 dark:text-primary-100">
           How to Find Players
         </h3>
         <button
           onClick={() => setShowHelp(false)}
-          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+          className="text-primary dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-200"
         >
           ×
         </button>
       </div>
 
-      <div className="space-y-3 text-sm text-blue-800 dark:text-blue-200">
+      <div className="space-y-3 text-sm text-primary-800 dark:text-primary-200">
         <div>
           <strong>By User ID:</strong>
           <ul className="list-disc list-inside mt-1 ml-4 space-y-1">
@@ -44,7 +44,7 @@ export default function SearchHelp() {
             </li>
             <li>
               Try some examples:{" "}
-              <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">
+              <code className="bg-primary-100 dark:bg-primary-800 px-1 rounded">
                 user/abc12345
               </code>
             </li>
@@ -63,7 +63,7 @@ export default function SearchHelp() {
           </ul>
         </div>
 
-        <div className="text-xs text-blue-600 dark:text-blue-400 mt-3">
+        <div className="text-xs text-primary dark:text-primary-400 mt-3">
           <strong>Note:</strong> Start.gg doesn&apos;t allow searching all
           players by name. You need either their exact user ID or to find them
           through tournament participation.

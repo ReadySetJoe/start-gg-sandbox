@@ -185,7 +185,7 @@ export default function PowerRankingTools({
           {!showSearch && (
             <button
               onClick={() => setShowSearch(true)}
-              className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+              className="px-3 py-1 bg-primary text-white rounded text-sm hover:bg-primary-600 transition-colors"
             >
               + Add Player
             </button>
@@ -300,11 +300,11 @@ export default function PowerRankingTools({
             ))}
           </div>
 
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+          <div className="mt-6 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+            <h5 className="font-medium text-primary-900 dark:text-primary-100 mb-2">
               📊 Power Ranking Insights
             </h5>
-            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+            <ul className="text-sm text-primary-800 dark:text-primary-200 space-y-1">
               <li>• Rankings prioritize win rate over total matches</li>
               <li>
                 • Players with similar win rates are ranked by tournament

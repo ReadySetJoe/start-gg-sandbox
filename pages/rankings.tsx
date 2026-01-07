@@ -19,11 +19,11 @@ export default function Rankings() {
 
         <RankingsMatrix />
 
-        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-          <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">
+        <div className="mt-8 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-6">
+          <h3 className="font-semibold text-primary-900 dark:text-primary-100 mb-3">
             💡 Power Ranking Methodology
           </h3>
-          <div className="grid md:grid-cols-2 gap-4 text-sm text-blue-800 dark:text-blue-200">
+          <div className="grid md:grid-cols-2 gap-4 text-sm text-primary-800 dark:text-primary-200">
             <div>
               <h4 className="font-medium mb-2">📊 Ranking System</h4>
               <ul className="space-y-1">

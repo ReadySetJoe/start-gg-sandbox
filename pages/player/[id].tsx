@@ -36,7 +36,7 @@ export default function PlayerProfilePage() {
         <div className="mb-6">
           <Link
             href="/search"
-            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
+            className="text-primary dark:text-primary-400 hover:underline flex items-center gap-2"
           >
             ← Back to Search
           </Link>
@@ -55,7 +55,7 @@ export default function PlayerProfilePage() {
         <div className="mb-6">
           <Link
             href="/search"
-            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
+            className="text-primary dark:text-primary-400 hover:underline flex items-center gap-2"
           >
             ← Back to Search
           </Link>
@@ -125,7 +125,7 @@ export default function PlayerProfilePage() {
       <div className="mb-6 flex justify-between items-center">
         <Link
           href="/search"
-          className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
+          className="text-primary dark:text-primary-400 hover:underline flex items-center gap-2"
         >
           ← Back to Search
         </Link>

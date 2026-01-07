@@ -650,7 +650,7 @@ export default function RankingsMatrix() {
                 <button
                   onClick={loadExamplePlayers}
                   disabled={loadingExamples}
-                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+                  className="px-6 py-2 bg-accent hover:bg-accent-600 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
                 >
                   {loadingExamples ? "Loading..." : "Load Example Players"}
                 </button>
@@ -783,7 +783,7 @@ export default function RankingsMatrix() {
                 <button
                   onClick={loadExamplePlayers}
                   disabled={loadingExamples}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+                  className="px-4 py-2 bg-accent hover:bg-accent-600 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
                 >
                   {loadingExamples ? "Loading..." : "Try Example Players"}
                 </button>

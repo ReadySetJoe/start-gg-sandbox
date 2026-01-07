@@ -65,7 +65,7 @@ export default function PlayerProfile({
     <div className="max-w-4xl mx-auto">
       <button
         onClick={onBack}
-        className="mb-6 text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
+        className="mb-6 text-primary dark:text-primary-400 hover:underline flex items-center gap-2"
       >
         ← Back to search
       </button>

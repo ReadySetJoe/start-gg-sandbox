@@ -15,7 +15,7 @@ export default function Layout({ children }: LayoutProps) {
               href="/"
               className="text-xl font-bold text-gradient hover:opacity-80 transition-opacity"
             >
-              Start.gg Player Profiles
+              Whoisbetter.me
             </Link>
             <div className="flex gap-4">
               <Link

@@ -47,11 +47,11 @@ export default function Search() {
 
       {hasExamplePlayers && (
         <div className="w-full max-w-3xl mx-auto mt-8">
-          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
-            <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-3">
+          <div className="bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-lg p-6">
+            <h3 className="font-semibold text-accent-900 dark:text-accent-100 mb-3">
               Try an Example Player
             </h3>
-            <p className="text-sm text-purple-800 dark:text-purple-200 mb-4">
+            <p className="text-sm text-accent-800 dark:text-accent-200 mb-4">
               New to the app? Click on one of these players to see how it works:
             </p>
             <div className="flex flex-wrap gap-2">
@@ -60,7 +60,7 @@ export default function Search() {
                   key={example.slug}
                   onClick={() => loadExamplePlayer(example.slug)}
                   disabled={loadingExample !== null}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-all text-sm"
+                  className="px-4 py-2 bg-accent hover:bg-accent-600 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-all text-sm"
                 >
                   {loadingExample === example.slug
                     ? "Loading..."

@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:developer.start.gg)",
       "Bash(npm install:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }
